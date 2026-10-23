@@ -1,6 +1,11 @@
 package br.com.fassium.catalogoartistas.dominio.artista.model;
 
+import br.com.fassium.catalogoartistas.dominio.album.model.Album;
 import jakarta.persistence.*;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "artista")
@@ -16,6 +21,14 @@ public class Artista {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoArtista tipo;
+
+    @ManyToMany
+    @JoinTable(
+            name = "artista_album",
+            joinColumns = @JoinColumn(name = "artista_id"),
+            inverseJoinColumns = @JoinColumn(name = "album_id")
+    )
+    private Set<Album> albuns = new HashSet<>();
 
     protected Artista() {
     }
@@ -43,5 +56,13 @@ public class Artista {
 
     public void setTipo(TipoArtista tipo) {
         this.tipo = tipo;
+    }
+
+    public Set<Album> getAlbuns() {
+        return Collections.unmodifiableSet(albuns);
+    }
+
+    public void adicionarAlbum(Album album) {
+        this.albuns.add(album);
     }
 }
