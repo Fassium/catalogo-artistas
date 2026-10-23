@@ -1,0 +1,10 @@
+# Credenciais locais (use o .env.example como modelo)
+.env
+
+# Editores
+.vscode/
+.idea/
+
+# Sistema
+Thumbs.db
+.DS_Store

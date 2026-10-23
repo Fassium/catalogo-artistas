@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: catalogo-artistas
+  datasource:
+    url: jdbc:postgresql://localhost:5432/catalogo
+    username: catalogo
+    password: catalogo123
