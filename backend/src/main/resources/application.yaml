@@ -5,3 +5,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/catalogo
     username: catalogo
     password: catalogo123
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
