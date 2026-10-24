@@ -1,4 +1,4 @@
-package br.com.fassium.catalogoartistas.dominio.artista.repository;
+package br.com.fassium.catalogoartistas.dominio.artista;
 
 import br.com.fassium.catalogoartistas.dominio.artista.model.Artista;
 import org.springframework.data.domain.Page;

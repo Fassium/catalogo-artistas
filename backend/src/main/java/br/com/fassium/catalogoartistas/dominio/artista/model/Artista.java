@@ -28,6 +28,7 @@ public class Artista {
             joinColumns = @JoinColumn(name = "artista_id"),
             inverseJoinColumns = @JoinColumn(name = "album_id")
     )
+    @OrderBy("titulo ASC")
     private Set<Album> albuns = new HashSet<>();
 
     protected Artista() {
