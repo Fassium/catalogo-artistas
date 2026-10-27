@@ -1,5 +1,6 @@
 package br.com.fassium.catalogoartistas.dominio.album;
 
+import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,4 +21,12 @@ public class AlbumService {
         return albumRepository.findByTituloContainingIgnoreCase(titulo, pageable)
                 .map(AlbumResponse::from);
     }
+
+    @Transactional(readOnly = true)
+    public AlbumResponse buscarPorId(Long id) {
+        return albumRepository.findById(id)
+                .map(AlbumResponse::from)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + id));
+    }
+
 }
