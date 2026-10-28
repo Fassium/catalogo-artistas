@@ -32,9 +32,22 @@ public class AlbumService {
     }
 
     @Transactional
-    public AlbumResponse criar(AlbumRequest request){
+    public AlbumResponse criar(AlbumRequest request) {
         Album albumCriado = albumRepository.save(request.toEntity());
         return AlbumResponse.from(albumCriado);
+    }
+
+    @Transactional
+    public AlbumResponse atualizar(Long id, AlbumRequest request) {
+
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + id));
+
+        album.setTitulo(request.titulo());
+        album.setAnoLancamento(request.anoLancamento());
+
+        return AlbumResponse.from(album);
+
     }
 
 }

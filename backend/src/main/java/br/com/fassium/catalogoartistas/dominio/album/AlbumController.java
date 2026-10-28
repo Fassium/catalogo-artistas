@@ -45,4 +45,9 @@ public class AlbumController {
         return ResponseEntity.created(location).body(albumCriado);
     }
 
+    @PutMapping("/{id}")
+    public AlbumResponse atualizar(@PathVariable Long id, @Valid @RequestBody AlbumRequest request) {
+        return albumService.atualizar(id, request);
+    }
+
 }
