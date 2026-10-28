@@ -50,5 +50,17 @@ public class ArtistaController {
         return artistaService.atualizar(id, request);
     }
 
+    @PostMapping("/{artistaId}/albuns/{albumId}")
+    public ResponseEntity<Void> vincularAlbum(@PathVariable Long artistaId, @PathVariable Long albumId) {
+        artistaService.vincularAlbum(artistaId, albumId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{artistaId}/albuns/{albumId}")
+    public ResponseEntity<Void> desvincularAlbum(@PathVariable Long artistaId, @PathVariable Long albumId) {
+        artistaService.desvincularAlbum(artistaId, albumId);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

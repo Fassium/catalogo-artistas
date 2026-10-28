@@ -63,7 +63,9 @@ public class Artista {
         return Collections.unmodifiableSet(albuns);
     }
 
-    public void adicionarAlbum(Album album) {
-        this.albuns.add(album);
+    public void vincularAlbum(Album album) {this.albuns.add(album);}
+
+    public void desvincularAlbum(Album album) {
+        this.albuns.remove(album);
     }
 }
