@@ -30,9 +30,7 @@ public class ArtistaService {
 
     @Transactional(readOnly = true)
     public ArtistaResponse buscarPorId(Long id) {
-        return artistaRepository.findById(id)
-                .map(ArtistaResponse::from)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + id));
+        return ArtistaResponse.from(buscarArtistaPorId(id));
     }
 
     @Transactional
@@ -43,8 +41,7 @@ public class ArtistaService {
 
     @Transactional
     public ArtistaResponse atualizar(Long id, ArtistaRequest request) {
-        Artista artista = artistaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + id));
+        Artista artista = buscarArtistaPorId(id);
 
         artista.setNome(request.nome());
         artista.setTipo(request.tipo());
@@ -54,23 +51,40 @@ public class ArtistaService {
 
     @Transactional
     public void vincularAlbum(Long artistaId, Long albumId) {
-        Artista artista = artistaRepository.findById(artistaId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + artistaId));
 
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
+        Artista artista = buscarArtistaPorId(artistaId);
+
+        Album album = buscarAlbumPorId(albumId);
 
         artista.vincularAlbum(album);
     }
 
     @Transactional
     public void desvincularAlbum(Long artistaId, Long albumId) {
-        Artista artista = artistaRepository.findById(artistaId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + artistaId));
-        Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
+
+        Artista artista = buscarArtistaPorId(artistaId);
+
+        Album album = buscarAlbumPorId(albumId);
 
         artista.desvincularAlbum(album);
+    }
+
+    @Transactional
+    public void excluir(Long artistaId) {
+        Artista artista = buscarArtistaPorId(artistaId);
+
+        artistaRepository.delete(artista);
+    }
+
+    private Artista buscarArtistaPorId(Long artistaId) {
+        return artistaRepository.findById(artistaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + artistaId));
+    }
+
+    private Album buscarAlbumPorId(Long albumId) {
+        return albumRepository.findById(albumId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
+
     }
 
 

@@ -4,6 +4,7 @@ import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoExc
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumRequest;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumResponse;
 import br.com.fassium.catalogoartistas.dominio.album.model.Album;
+import br.com.fassium.catalogoartistas.dominio.artista.ArtistaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlbumService {
 
     private final AlbumRepository albumRepository;
+    private final ArtistaRepository artistaRepository;
 
-    public AlbumService(AlbumRepository albumRepository) {
+    public AlbumService(AlbumRepository albumRepository, ArtistaRepository artistaRepository) {
         this.albumRepository = albumRepository;
+        this.artistaRepository = artistaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -26,9 +29,7 @@ public class AlbumService {
 
     @Transactional(readOnly = true)
     public AlbumResponse buscarPorId(Long id) {
-        return albumRepository.findById(id)
-                .map(AlbumResponse::from)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + id));
+        return AlbumResponse.from(buscarAlbumPorId(id));
     }
 
     @Transactional
@@ -40,14 +41,27 @@ public class AlbumService {
     @Transactional
     public AlbumResponse atualizar(Long id, AlbumRequest request) {
 
-        Album album = albumRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + id));
+        Album album = buscarAlbumPorId(id);
 
         album.setTitulo(request.titulo());
         album.setAnoLancamento(request.anoLancamento());
 
         return AlbumResponse.from(album);
+    }
 
+    @Transactional
+    public void excluir(Long id) {
+        Album album = buscarAlbumPorId(id);
+
+        artistaRepository.findByAlbunsId(id)
+                .forEach(artista -> artista.desvincularAlbum(album));
+
+        albumRepository.delete(album);
+    }
+
+    private Album buscarAlbumPorId(Long albumId) {
+        return albumRepository.findById(albumId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
     }
 
 }

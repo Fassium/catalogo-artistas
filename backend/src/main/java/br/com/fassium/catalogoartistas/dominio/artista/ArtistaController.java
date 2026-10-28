@@ -62,5 +62,10 @@ public class ArtistaController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        artistaService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 
 }

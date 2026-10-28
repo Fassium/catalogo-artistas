@@ -50,4 +50,10 @@ public class AlbumController {
         return albumService.atualizar(id, request);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        albumService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
