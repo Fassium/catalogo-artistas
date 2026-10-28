@@ -4,9 +4,13 @@ import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoExc
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException; // NOVO
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import tools.jackson.databind.exc.InvalidFormatException;
+
+import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,6 +30,20 @@ public class GlobalExceptionHandler {
         }
 
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detalhe);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail tratarValidacao(MethodArgumentNotValidException ex) {
+        List<Map<String, String>> camposInvalidos = ex.getBindingResult().getFieldErrors().stream()
+                .map(erro -> Map.of(
+                        "campo", erro.getField(),
+                        "mensagem", String.valueOf(erro.getDefaultMessage())))
+                .toList();
+
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNPROCESSABLE_CONTENT, "Há campos inválidos na requisição.");
+        problema.setProperty("camposInvalidos", camposInvalidos);
+        return problema;
     }
 
 }
