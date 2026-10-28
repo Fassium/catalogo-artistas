@@ -29,7 +29,7 @@ public class AlbumController {
         return albumService.listar(titulo, pageable);
 
     }
-    
+
     @GetMapping("/{id}")
     public AlbumResponse buscarPorId(@PathVariable Long id) {
         return albumService.buscarPorId(id);

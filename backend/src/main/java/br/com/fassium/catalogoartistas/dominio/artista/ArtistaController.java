@@ -45,5 +45,10 @@ public class ArtistaController {
         return ResponseEntity.created(location).body(artistaCriado);
     }
 
+    @PutMapping("/{id}")
+    public ArtistaResponse atualizar(@PathVariable Long id, @Valid @RequestBody ArtistaRequest request) {
+        return artistaService.atualizar(id, request);
+    }
+
 
 }

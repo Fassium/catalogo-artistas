@@ -37,4 +37,16 @@ public class ArtistaService {
         return ArtistaResponse.from(artista);
     }
 
+    @Transactional
+    public ArtistaResponse atualizar(Long id, ArtistaRequest request) {
+        Artista artista = artistaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + id));
+
+        artista.setNome(request.nome());
+        artista.setTipo(request.tipo());
+
+        return ArtistaResponse.from(artista);
+    }
+
+
 }
