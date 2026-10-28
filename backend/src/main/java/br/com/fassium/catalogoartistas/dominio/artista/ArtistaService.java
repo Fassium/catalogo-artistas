@@ -1,7 +1,9 @@
 package br.com.fassium.catalogoartistas.dominio.artista;
 
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
+import br.com.fassium.catalogoartistas.dominio.artista.dto.ArtistaRequest;
 import br.com.fassium.catalogoartistas.dominio.artista.dto.ArtistaResponse;
+import br.com.fassium.catalogoartistas.dominio.artista.model.Artista;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,12 @@ public class ArtistaService {
         return artistaRepository.findById(id)
                 .map(ArtistaResponse::from)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Artista não encontrado: " + id));
+    }
+
+    @Transactional
+    public ArtistaResponse criar(ArtistaRequest request) {
+        Artista artista = artistaRepository.save(request.toEntity());
+        return ArtistaResponse.from(artista);
     }
 
 }
