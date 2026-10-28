@@ -2,6 +2,7 @@ package br.com.fassium.catalogoartistas.dominio.artista;
 
 import br.com.fassium.catalogoartistas.dominio.artista.dto.ArtistaRequest;
 import br.com.fassium.catalogoartistas.dominio.artista.dto.ArtistaResponse;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -35,7 +36,7 @@ public class ArtistaController {
     }
 
     @PostMapping
-    public ResponseEntity<ArtistaResponse> criar(@RequestBody ArtistaRequest request) {
+    public ResponseEntity<ArtistaResponse> criar(@Valid @RequestBody ArtistaRequest request) {
         ArtistaResponse artistaCriado = artistaService.criar(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
