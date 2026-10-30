@@ -97,7 +97,7 @@ public class AutenticacaoService {
 
         refreshTokenRepository.save(new RefreshToken(usuario, calcularHash(refreshToken), Instant.now().plus(REFRESH_DIAS, ChronoUnit.DAYS)));
 
-        return new TokenResponse(accessToken, refreshToken);
+        return TokenResponse.bearer(accessToken, refreshToken, jwtPropriedades.expiracaoMinutos() * 60);
     }
 
 

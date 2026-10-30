@@ -2,6 +2,7 @@ package br.com.fassium.catalogoartistas.infra.handlers;
 
 import br.com.fassium.catalogoartistas.common.exceptions.CredenciaisInvalidasException;
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
+import br.com.fassium.catalogoartistas.common.exceptions.RefreshTokenInvalidoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -49,6 +50,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CredenciaisInvalidasException.class)
     public ProblemDetail tratarCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(RefreshTokenInvalidoException.class)
+    public ProblemDetail tratarRefreshTokenInvalido(RefreshTokenInvalidoException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
