@@ -1,5 +1,6 @@
 package br.com.fassium.catalogoartistas.infra.configuracao;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +12,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -96,6 +99,30 @@ public class SecurityConfiguracao {
         SecretKey chave = new SecretKeySpec(Base64.getDecoder().decode(propriedades.chave()), "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(chave).build();
     }
+
+    /**
+     * O "criador" de tokens: o par do JwtDecoder. Ele ASSINA o token; o decoder CONFERE.
+     * <p>
+     * Quem chama: o nosso AutenticacaoService (a criar), no login e no refresh. Ele monta os dados
+     * (e-mail do usuário, hora de criação, validade de 5 min) e pede para este encoder gerar o texto do token.
+     * Diferente do decoder, aqui NÓS chamamos, quando precisamos de um token novo.
+     * <p>
+     * O que faz, em ordem:
+     * 1. Recebe o JwtPropriedades (a chave do .env).
+     * 2. Monta a MESMA chave HS256 do decoder (Base64.decode + SecretKeySpec).
+     * 3. ImmutableSecret: embrulha a chave no formato que a biblioteca Nimbus pede para assinar.
+     * 4. NimbusJwtEncoder: monta o criador. Ele junta cabeçalho + dados, calcula a assinatura com a chave
+     * e devolve o texto "cabeçalho.dados.assinatura".
+     * <p>
+     * Fluxo completo: login -> AutenticacaoService -> jwtEncoder cria o token -> cliente guarda ->
+     * próximos pedidos levam o token -> jwtDecoder confere. Chaves diferentes = token recusado (401).
+     */
+    @Bean
+    public JwtEncoder jwtEncoder(JwtPropriedades propriedades) {
+        SecretKey chave = new SecretKeySpec(Base64.getDecoder().decode(propriedades.chave()), "HmacSHA256");
+        return new NimbusJwtEncoder(new ImmutableSecret<>(chave));
+    }
+
 
 
 }
