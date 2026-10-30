@@ -12,8 +12,14 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.HexFormat;
 
 @Service
 public class AutenticacaoService {
@@ -22,6 +28,7 @@ public class AutenticacaoService {
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
     private final JwtPropriedades jwtPropriedades;
+    private final SecureRandom secureRandom = new SecureRandom();
 
 
     public AutenticacaoService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, JwtPropriedades jwtPropriedades) {
@@ -58,6 +65,21 @@ public class AutenticacaoService {
                 JwsHeader.with(MacAlgorithm.HS256).build(), dados);
 
         return jwtEncoder.encode(parametros).getTokenValue();
+    }
+
+    private String gerarRefreshTokenOpaco() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private String calcularHash(String valor) {
+        try {
+            byte[] resumo = MessageDigest.getInstance("SHA-256").digest(valor.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(resumo);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 indisponível", e);
+        }
     }
 
 
