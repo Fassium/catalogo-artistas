@@ -1,5 +1,6 @@
 package br.com.fassium.catalogoartistas.infra.configuracao;
 
+import br.com.fassium.catalogoartistas.infra.handlers.ErrosSegurancaHandler;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ import java.util.Base64;
  * 1. O pedido chega do cliente (Postman, Angular).
  * 2. O Spring Security passa o pedido pelo filtro montado em filtroSeguranca() ANTES do Controller.
  * 3. Rota liberada (login, refresh, Swagger): segue direto para o Controller.
- * 4. Qualquer outra rota: exige token. Sem token, o pedido é barrado (hoje 403) e o Controller nem é chamado.
+ * 4. Qualquer outra rota: exige token. Sem token, o pedido é barrado (401 em ProblemDetail) e o Controller nem é chamado.
  * <p>
  * EnableWebSecurity liga o Spring Security.
  * EnableConfigurationProperties registra o JwtPropriedades, que lê o bloco "seguranca.jwt" do application.yaml
@@ -62,10 +63,13 @@ public class SecurityConfiguracao {
      * e conferir o token usando o bean JwtDecoder (abaixo). Token válido: a requisição segue. Token ausente,
      * adulterado ou vencido (mais de 5 min): o Spring responde 401 e o Controller nem é chamado.
      * Customizer.withDefaults() = "use o comportamento padrão", sem ajustes extras.
+     * exceptionHandling + authenticationEntryPoint/accessDeniedHandler: trocam a resposta padrão do Spring Security
+     * (vazia ou com formato próprio) pelo ProblemDetail do ErrosSegurancaHandler: 401 sem token/token inválido, 403 sem permissão.
+     * O resource server tem o próprio gancho de 401, por isso ligamos os dois lugares.
      * http.build() monta o filtro, e o Spring o coloca na frente de todos os Controllers.
      */
     @Bean
-    public SecurityFilterChain filtroSeguranca(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filtroSeguranca(HttpSecurity http, ErrosSegurancaHandler errosSeguranca) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -74,7 +78,13 @@ public class SecurityConfiguracao {
                         .requestMatchers(HttpMethod.PUT, "/v1/autenticacao/refresh").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(recurso -> recurso.jwt(Customizer.withDefaults()));
+                .exceptionHandling(erros -> erros
+                        .authenticationEntryPoint(errosSeguranca)
+                        .accessDeniedHandler(errosSeguranca))
+                .oauth2ResourceServer(recurso -> recurso
+                        .jwt(Customizer.withDefaults())
+                        .authenticationEntryPoint(errosSeguranca)
+                        .accessDeniedHandler(errosSeguranca));
 
         return http.build();
     }
