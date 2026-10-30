@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Locale;
 
 @Service
 public class AutenticacaoService {
@@ -36,6 +37,8 @@ public class AutenticacaoService {
     private final SecureRandom secureRandom = new SecureRandom();
     private static final long REFRESH_DIAS = 7;
     private final RefreshTokenRepository refreshTokenRepository;
+    // BCrypt válido usado só para gastar tempo quando o e-mail não existe (ver validarCredenciais).
+    private static final String HASH_FICTICIO = "$2a$10$Y7zuYshgxcVaYWITxjtqTukY4qKh40BN77YkdKn9MK7Gsm/CSai8O";
 
 
     public AutenticacaoService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, JwtPropriedades jwtPropriedades, RefreshTokenRepository refreshTokenRepository) {
@@ -46,11 +49,23 @@ public class AutenticacaoService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    /**
+     * Valida e-mail e senha. E-mail inexistente e senha errada lançam a MESMA exceção.
+     * <p>
+     * Defesa contra enumeração de usuários por tempo de resposta: o BCrypt é lento de propósito,
+     * então e-mail inexistente (sem BCrypt) responderia bem mais rápido que senha errada.
+     * Por isso, quando o e-mail não existe, rodamos o BCrypt contra um hash fictício e
+     * descartamos o resultado, só para igualar o tempo dos dois casos.
+     */
     private Usuario validarCredenciais(LoginRequest request) {
-        String email = request.email().trim().toLowerCase();
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(CredenciaisInvalidasException::new);
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+
+        if (usuario == null) {
+            passwordEncoder.matches(request.senha(), HASH_FICTICIO);
+            throw new CredenciaisInvalidasException();
+        }
 
         if (!usuario.isAtivo() || !passwordEncoder.matches(request.senha(), usuario.getSenha())) {
             throw new CredenciaisInvalidasException();
@@ -59,12 +74,13 @@ public class AutenticacaoService {
         return usuario;
 
     }
-
+    
     private String gerarAccessToken(Usuario usuario) {
         Instant agora = Instant.now();
 
         JwtClaimsSet dados = JwtClaimsSet.builder()
                 .subject(usuario.getEmail())
+                .issuer(jwtPropriedades.emissor())
                 .issuedAt(agora)
                 .expiresAt(agora.plus(jwtPropriedades.expiracaoMinutos(), ChronoUnit.MINUTES))
                 .build();

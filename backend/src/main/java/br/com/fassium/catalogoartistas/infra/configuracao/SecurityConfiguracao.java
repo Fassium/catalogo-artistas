@@ -11,14 +11,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 
 /**
@@ -124,9 +123,16 @@ public class SecurityConfiguracao {
      * quem assina e quem confere precisam da mesma chave. Se a chave mudar, todos os tokens antigos deixam de valer.
      */
     @Bean
-    public JwtDecoder jwtDecoder(SecretKey chaveJwt) {
-        return NimbusJwtDecoder.withSecretKey(chaveJwt).build();
+    public JwtDecoder jwtDecoder(SecretKey chaveJwt, JwtPropriedades propriedades) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(chaveJwt).build();
+
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                new JwtTimestampValidator(Duration.ofSeconds(5)),
+                new JwtIssuerValidator(propriedades.emissor())));
+
+        return decoder;
     }
+
 
     /**
      * O "criador" de tokens: o par do JwtDecoder. Ele ASSINA o token; o decoder CONFERE.

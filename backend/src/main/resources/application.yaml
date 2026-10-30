@@ -17,4 +17,6 @@ seguranca:
   jwt:
     chave: ${JWT_CHAVE}
     expiracao-minutos: 5
+    emissor: catalogo-artistas-api
+
 
