@@ -40,6 +40,8 @@ import java.util.Base64;
 @EnableConfigurationProperties(JwtPropriedades.class)
 public class SecurityConfiguracao {
 
+    private static final int TAMANHO_MINIMO_CHAVE_BYTES = 32;
+
     /**
      * Ferramenta que embaralha senhas (BCrypt). Será usada no login: a senha digitada é comparada
      * com o hash guardado na tabela usuario. A senha nunca é guardada nem comparada em texto puro.
@@ -79,25 +81,51 @@ public class SecurityConfiguracao {
     }
 
     /**
+     * A chave secreta do JWT (HS256), montada UMA vez só e usada pelo jwtDecoder e pelo jwtEncoder.
+     * <p>
+     * Quem chama: o Spring, na subida da API, para entregar a chave aos dois beans abaixo.
+     * <p>
+     * O que faz, em ordem:
+     * 1. Base64.decode: a chave no .env é um texto; aqui vira os bytes reais. Se não for Base64 válido
+     * (ex.: JWT_CHAVE ausente), a API NÃO sobe e a mensagem diz o motivo.
+     * 2. Confere o tamanho: o HS256 exige no mínimo 32 bytes (256 bits). Chave curta = a API não sobe.
+     * Falhar na subida é melhor que descobrir no primeiro login, com erro 500.
+     * 3. SecretKeySpec: embrulha os bytes como chave do algoritmo HmacSHA256.
+     */
+    @Bean
+    public SecretKey chaveJwt(JwtPropriedades propriedades) {
+        byte[] bytes;
+        try {
+            bytes = Base64.getDecoder().decode(propriedades.chave());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("A chave JWT (JWT_CHAVE) não é um Base64 válido.", e);
+        }
+
+        if (bytes.length < TAMANHO_MINIMO_CHAVE_BYTES) {
+            throw new IllegalStateException("A chave JWT (JWT_CHAVE) tem " + bytes.length
+                    + " bytes; o HS256 exige no mínimo " + TAMANHO_MINIMO_CHAVE_BYTES + ".");
+        }
+
+        return new SecretKeySpec(bytes, "HmacSHA256");
+    }
+
+    /**
      * O "conferidor" de tokens (JWT = JSON Web Token: um texto com 3 partes, cabeçalho.dados.assinatura).
      * <p>
      * Quem chama: o Spring Security, sozinho, a cada pedido a uma rota protegida (por causa do
      * oauth2ResourceServer acima). Nós não chamamos este método.
      * <p>
      * O que faz, em ordem:
-     * 1. Recebe o JwtPropriedades (o Spring injeta; veio do .env -> application.yaml).
-     * 2. Base64.decode: a chave no .env é um texto; aqui vira os bytes reais da chave.
-     * 3. SecretKeySpec: embrulha os bytes como chave do algoritmo HmacSHA256 (HS256).
-     * 4. NimbusJwtDecoder: monta o conferidor. Ele recalcula a assinatura do token com ESTA chave:
+     * 1. Recebe a SecretKey pronta do bean chaveJwt (já decodificada e validada na subida).
+     * 2. NimbusJwtDecoder: monta o conferidor. Ele recalcula a assinatura do token com ESTA chave:
      * se bater, ninguém mexeu nos dados; se não bater, o token é recusado. Também confere a validade (exp).
      * <p>
-     * O JwtEncoder (a criar) vai assinar o token no login com a MESMA chave. É isso que liga as duas pontas:
+     * O JwtEncoder (abaixo) assina o token no login com a MESMA chave. É isso que liga as duas pontas:
      * quem assina e quem confere precisam da mesma chave. Se a chave mudar, todos os tokens antigos deixam de valer.
      */
     @Bean
-    public JwtDecoder jwtDecoder(JwtPropriedades propriedades) {
-        SecretKey chave = new SecretKeySpec(Base64.getDecoder().decode(propriedades.chave()), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(chave).build();
+    public JwtDecoder jwtDecoder(SecretKey chaveJwt) {
+        return NimbusJwtDecoder.withSecretKey(chaveJwt).build();
     }
 
     /**
@@ -108,21 +136,17 @@ public class SecurityConfiguracao {
      * Diferente do decoder, aqui NÓS chamamos, quando precisamos de um token novo.
      * <p>
      * O que faz, em ordem:
-     * 1. Recebe o JwtPropriedades (a chave do .env).
-     * 2. Monta a MESMA chave HS256 do decoder (Base64.decode + SecretKeySpec).
-     * 3. ImmutableSecret: embrulha a chave no formato que a biblioteca Nimbus pede para assinar.
-     * 4. NimbusJwtEncoder: monta o criador. Ele junta cabeçalho + dados, calcula a assinatura com a chave
+     * 1. Recebe a MESMA SecretKey do decoder (bean chaveJwt): a chave é montada uma vez só.
+     * 2. ImmutableSecret: embrulha a chave no formato que a biblioteca Nimbus pede para assinar.
+     * 3. NimbusJwtEncoder: monta o criador. Ele junta cabeçalho + dados, calcula a assinatura com a chave
      * e devolve o texto "cabeçalho.dados.assinatura".
      * <p>
      * Fluxo completo: login -> AutenticacaoService -> jwtEncoder cria o token -> cliente guarda ->
      * próximos pedidos levam o token -> jwtDecoder confere. Chaves diferentes = token recusado (401).
      */
     @Bean
-    public JwtEncoder jwtEncoder(JwtPropriedades propriedades) {
-        SecretKey chave = new SecretKeySpec(Base64.getDecoder().decode(propriedades.chave()), "HmacSHA256");
-        return new NimbusJwtEncoder(new ImmutableSecret<>(chave));
+    public JwtEncoder jwtEncoder(SecretKey chaveJwt) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(chaveJwt));
     }
-
-
 
 }
