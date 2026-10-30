@@ -1,5 +1,6 @@
 package br.com.fassium.catalogoartistas.infra.handlers;
 
+import br.com.fassium.catalogoartistas.common.exceptions.CredenciaisInvalidasException;
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -45,5 +46,11 @@ public class GlobalExceptionHandler {
         problema.setProperty("camposInvalidos", camposInvalidos);
         return problema;
     }
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ProblemDetail tratarCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
 
 }
