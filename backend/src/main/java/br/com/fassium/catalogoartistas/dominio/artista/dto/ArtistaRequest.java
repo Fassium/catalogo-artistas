@@ -15,6 +15,11 @@ public record ArtistaRequest(
         @NotNull
         TipoArtista tipo
 ) {
+    /** Remove espaços das pontas: "  Legião  " vira "Legião", e "   " vira "" e é barrado pelo @NotBlank. */
+    public ArtistaRequest {
+        nome = nome == null ? null : nome.trim();
+    }
+
     public Artista toEntity() {
         return new Artista(nome, tipo);
     }

@@ -13,7 +13,12 @@ public record AlbumRequest(
         Integer anoLancamento
 
 ) {
-        public Album toEntity(){
-                return new Album(titulo, anoLancamento);
-        }
+    /** Remove espaços das pontas: "  Mais do Mesmo  " vira "Mais do Mesmo", e "   " vira "" e é barrado pelo @NotBlank. */
+    public AlbumRequest {
+        titulo = titulo == null ? null : titulo.trim();
+    }
+
+    public Album toEntity() {
+        return new Album(titulo, anoLancamento);
+    }
 }

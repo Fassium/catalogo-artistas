@@ -59,7 +59,8 @@ public class AlbumService {
         albumRepository.delete(album);
     }
 
-    private Album buscarAlbumPorId(Long albumId) {
+    /** Público porque o ArtistaService também precisa da entidade (ligar/desligar álbum), sem duplicar a busca e o 404. */
+    public Album buscarAlbumPorId(Long albumId) {
         return albumRepository.findById(albumId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
     }

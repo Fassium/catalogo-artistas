@@ -11,21 +11,8 @@
     <groupId>br.com.fassium</groupId>
     <artifactId>catalogo-artistas</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name/>
-    <description/>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <name>catalogo-artistas</name>
+    <description>API REST de artistas e álbuns (Spring Boot, JPA, Flyway, JWT)</description>
     <properties>
         <java.version>25</java.version>
     </properties>
@@ -46,7 +33,6 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

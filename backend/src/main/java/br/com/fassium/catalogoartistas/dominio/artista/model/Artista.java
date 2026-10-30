@@ -63,9 +63,30 @@ public class Artista {
         return Collections.unmodifiableSet(albuns);
     }
 
-    public void vincularAlbum(Album album) {this.albuns.add(album);}
+    public void vincularAlbum(Album album) {
+        this.albuns.add(album);
+    }
 
     public void desvincularAlbum(Album album) {
         this.albuns.remove(album);
+    }
+
+    /**
+     * Igualdade por id (chave do banco). Entidade ainda sem id (não salva) só é igual a ela mesma.
+     * Usa getId() e instanceof, e não o campo e getClass(), porque o Hibernate pode entregar um proxy.
+     * O hashCode é constante por classe: o id muda de null para um número ao salvar, e o hash não pode mudar
+     * enquanto o objeto está num Set.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        return o instanceof Artista outro && id != null && id.equals(outro.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Artista.class.hashCode();
     }
 }
