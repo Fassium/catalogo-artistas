@@ -2,6 +2,10 @@ package br.com.fassium.catalogoartistas.infra.configuracao;
 
 import br.com.fassium.catalogoartistas.infra.handlers.ErrosSegurancaHandler;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Duration;
+import java.util.List;
 import java.util.Base64;
 
 /**
@@ -71,6 +76,7 @@ public class SecurityConfiguracao {
     @Bean
     public SecurityFilterChain filtroSeguranca(HttpSecurity http, ErrosSegurancaHandler errosSeguranca) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(rotas -> rotas
@@ -87,6 +93,34 @@ public class SecurityConfiguracao {
                         .accessDeniedHandler(errosSeguranca));
 
         return http.build();
+    }
+
+    /**
+     * CORS: quais origens (sites) o navegador pode deixar chamar esta API. Sem isto, o Angular em localhost:4200
+     * é bloqueado pelo navegador ao chamar a API em localhost:8080 (origens diferentes).
+     * <p>
+     * Só as origens da lista (seguranca.cors.origens-permitidas; variável CORS_ORIGENS, separadas por vírgula).
+     * Nunca "*": qualquer site poderia chamar a API em nome do usuário.
+     * Métodos e cabeçalhos: só o que a API usa. Authorization é o do token Bearer.
+     * Sem allowCredentials: o token vai no cabeçalho, não em cookie.
+     * maxAge: o navegador guarda a resposta do preflight (OPTIONS) por 1 h, em vez de perguntar a cada chamada.
+     * <p>
+     * O .cors(...) no filtroSeguranca usa este bean (o nome corsConfigurationSource é o que o Spring procura) e
+     * responde o preflight ANTES da checagem de token, senão o OPTIONS (que não leva token) daria 401.
+     * Não afeta o front Delphi nem o curl: CORS é uma regra só dos navegadores.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${seguranca.cors.origens-permitidas}") List<String> origensPermitidas) {
+        CorsConfiguration configuracao = new CorsConfiguration();
+        configuracao.setAllowedOrigins(origensPermitidas);
+        configuracao.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuracao.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuracao.setMaxAge(Duration.ofHours(1));
+
+        UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
+        fonte.registerCorsConfiguration("/**", configuracao);
+        return fonte;
     }
 
     /**
