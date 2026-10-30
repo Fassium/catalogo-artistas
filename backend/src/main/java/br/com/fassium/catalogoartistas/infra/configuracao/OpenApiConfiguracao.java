@@ -1,7 +1,10 @@
 package br.com.fassium.catalogoartistas.infra.configuracao;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,9 +18,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfiguracao {
 
+    private static final String ESQUEMA_BEARER = "bearerAuth";
+
     /**
      * Cria o "cabeçalho" da documentação: título, descrição e versão que aparecem no topo do Swagger.
-     * Não tem regra de negócio, só texto.
+     * <p>
+     * Também declara o esquema de segurança Bearer JWT: é ele que faz aparecer o botão "Authorize" no Swagger.
+     * O avaliador faz login, cola o accessToken ali e todas as rotas protegidas passam a ser testáveis.
+     * addSecurityItem aplica o cadeado a TODAS as rotas; login e refresh o desligam com @SecurityRequirements
+     * (vazio) no AutenticacaoController, porque são públicos.
      */
     @Bean
     public OpenAPI openAPI() {
@@ -25,7 +34,13 @@ public class OpenApiConfiguracao {
                 .info(new Info()
                         .title("Catálogo de Artista e Álbuns")
                         .description("API de treino: artistas, álbuns e seus vínculos")
-                        .version("v1"));
+                        .version("v1"))
+                .components(new Components().addSecuritySchemes(ESQUEMA_BEARER,
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")))
+                .addSecurityItem(new SecurityRequirement().addList(ESQUEMA_BEARER));
     }
 
 }

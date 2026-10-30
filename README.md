@@ -28,7 +28,9 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Swagger: `http://localhost:8080/swagger-ui.html`
+Variáveis de ambiente que a API lê (modelo em `.env.example`): `POSTGRES_USER`, `POSTGRES_PASSWORD` e `JWT_CHAVE` (Base64, mínimo 32 bytes) são obrigatórias; `DB_URL` (padrão: banco local) e `SPRING_PROFILES_ACTIVE=dev` (mostra o SQL no log) são opcionais. Nenhuma credencial fica no código.
+
+Swagger: `http://localhost:8080/swagger-ui.html` (faça login em `POST /v1/autenticacao/login`, clique em **Authorize** e cole o `accessToken`).
 
 ## Como testar
 

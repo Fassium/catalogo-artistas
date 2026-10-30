@@ -1,0 +1,4 @@
+# Perfil de desenvolvimento: ativado com SPRING_PROFILES_ACTIVE=dev. Por padrão (sem perfil) o SQL não aparece no log.
+spring:
+  jpa:
+    show-sql: true

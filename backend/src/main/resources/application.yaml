@@ -2,14 +2,14 @@ spring:
   application:
     name: catalogo-artistas
   datasource:
-    url: jdbc:postgresql://localhost:5432/catalogo
-    username: catalogo
-    password: catalogo123
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/catalogo}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         default_batch_fetch_size: 20
@@ -18,5 +18,3 @@ seguranca:
     chave: ${JWT_CHAVE}
     expiracao-minutos: 5
     emissor: catalogo-artistas-api
-
-
