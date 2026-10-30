@@ -79,7 +79,8 @@ public class AutenticacaoService {
         Instant agora = Instant.now();
 
         JwtClaimsSet dados = JwtClaimsSet.builder()
-                .subject(usuario.getEmail())
+                .subject(String.valueOf(usuario.getId()))
+                .claim("email", usuario.getEmail())
                 .issuer(jwtPropriedades.emissor())
                 .issuedAt(agora)
                 .expiresAt(agora.plus(jwtPropriedades.expiracaoMinutos(), ChronoUnit.MINUTES))
