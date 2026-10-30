@@ -1,7 +1,9 @@
 package br.com.fassium.catalogoartistas.dominio.autenticacao;
 
 import br.com.fassium.catalogoartistas.common.exceptions.CredenciaisInvalidasException;
+import br.com.fassium.catalogoartistas.common.exceptions.RefreshTokenInvalidoException;
 import br.com.fassium.catalogoartistas.dominio.autenticacao.dto.LoginRequest;
+import br.com.fassium.catalogoartistas.dominio.autenticacao.dto.RefreshRequest;
 import br.com.fassium.catalogoartistas.dominio.autenticacao.dto.TokenResponse;
 import br.com.fassium.catalogoartistas.dominio.autenticacao.model.RefreshToken;
 import br.com.fassium.catalogoartistas.dominio.autenticacao.model.Usuario;
@@ -100,6 +102,20 @@ public class AutenticacaoService {
         refreshTokenRepository.save(new RefreshToken(usuario, calcularHash(refreshToken), Instant.now().plus(REFRESH_DIAS, ChronoUnit.DAYS)));
 
         return TokenResponse.bearer(accessToken, refreshToken, jwtPropriedades.expiracaoMinutos() * 60);
+    }
+
+    @Transactional
+    public TokenResponse renovar(RefreshRequest request) {
+        RefreshToken atual = refreshTokenRepository.findByHash(calcularHash(request.refreshToken()))
+                .orElseThrow(RefreshTokenInvalidoException::new);
+
+        if (!atual.estaValido(Instant.now()) || !atual.getUsuario().isAtivo()) {
+            throw new RefreshTokenInvalidoException();
+        }
+
+        atual.revogar();
+
+        return emitirTokens(atual.getUsuario());
     }
 
 
