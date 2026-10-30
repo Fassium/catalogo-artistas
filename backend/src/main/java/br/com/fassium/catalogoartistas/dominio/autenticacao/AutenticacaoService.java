@@ -104,10 +104,15 @@ public class AutenticacaoService {
         return TokenResponse.bearer(accessToken, refreshToken, jwtPropriedades.expiracaoMinutos() * 60);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = RefreshTokenInvalidoException.class)
     public TokenResponse renovar(RefreshRequest request) {
         RefreshToken atual = refreshTokenRepository.findByHash(calcularHash(request.refreshToken()))
                 .orElseThrow(RefreshTokenInvalidoException::new);
+
+        if (atual.isRevogado()) {
+            refreshTokenRepository.revogarTodosDoUsuario(atual.getUsuario());
+            throw new RefreshTokenInvalidoException();
+        }
 
         if (!atual.estaValido(Instant.now()) || !atual.getUsuario().isAtivo()) {
             throw new RefreshTokenInvalidoException();
