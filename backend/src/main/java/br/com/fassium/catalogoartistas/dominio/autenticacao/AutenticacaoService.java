@@ -90,8 +90,10 @@ public class AutenticacaoService {
 
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        Usuario usuario = validarCredenciais(request);
+        return emitirTokens(validarCredenciais(request));
+    }
 
+    private TokenResponse emitirTokens(Usuario usuario) {
         String accessToken = gerarAccessToken(usuario);
         String refreshToken = gerarRefreshTokenOpaco();
 
