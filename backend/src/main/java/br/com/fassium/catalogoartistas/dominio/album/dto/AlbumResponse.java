@@ -12,7 +12,7 @@ public record AlbumResponse(
         List<ArtistaResumoResponse> artistas
 ) {
     public static AlbumResponse from(Album album) {
-        
+
         List<ArtistaResumoResponse> artistas = album.getArtistas()
                 .stream()
                 .map(ArtistaResumoResponse::from)
