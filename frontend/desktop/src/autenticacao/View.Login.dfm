@@ -16,8 +16,8 @@ object FrmLogin: TFrmLogin
   object lblTitulo: TLabel
     Left = 40
     Top = 40
-    Width = 245
-    Height = 36
+    Width = 263
+    Height = 37
     Caption = 'Cat'#225'logo de Artistas'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -29,7 +29,7 @@ object FrmLogin: TFrmLogin
   object lblSubtitulo: TLabel
     Left = 40
     Top = 80
-    Width = 118
+    Width = 107
     Height = 15
     Caption = 'Entre para continuar'
     Font.Charset = DEFAULT_CHARSET
@@ -42,7 +42,7 @@ object FrmLogin: TFrmLogin
   object lblEmail: TLabel
     Left = 40
     Top = 125
-    Width = 36
+    Width = 34
     Height = 15
     Caption = 'E-mail'
   end
@@ -53,7 +53,7 @@ object FrmLogin: TFrmLogin
     Height = 15
     Caption = 'Senha'
   end
-  object lblMensagem: TLabel
+  object lblMensagemSenha: TLabel
     Left = 40
     Top = 345
     Width = 300
@@ -62,17 +62,18 @@ object FrmLogin: TFrmLogin
     AutoSize = False
     Caption = 'E-mail ou senha inv'#225'lidos'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clRed
+    Font.Color = clWindowText
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
     ParentFont = False
+    Visible = False
   end
   object edtEmail: TEdit
     Left = 40
     Top = 145
     Width = 300
-    Height = 29
+    Height = 28
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -15
@@ -86,7 +87,7 @@ object FrmLogin: TFrmLogin
     Left = 40
     Top = 215
     Width = 300
-    Height = 29
+    Height = 28
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -15
@@ -104,10 +105,11 @@ object FrmLogin: TFrmLogin
     Height = 17
     Caption = 'Mostrar senha'
     TabOrder = 2
+    OnClick = chkMostrarSenhaClick
   end
   object btnEntrar: TButton
     Left = 40
-    Top = 290
+    Top = 297
     Width = 300
     Height = 42
     Caption = 'Entrar'
@@ -119,5 +121,6 @@ object FrmLogin: TFrmLogin
     Font.Style = []
     ParentFont = False
     TabOrder = 3
+    OnClick = btnEntrarClick
   end
 end

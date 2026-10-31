@@ -136,7 +136,6 @@
         </DCCReference>
         <DCCReference Include="src\autenticacao\View.Login.pas">
             <Form>FrmLogin</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
