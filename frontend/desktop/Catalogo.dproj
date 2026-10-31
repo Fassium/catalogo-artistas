@@ -137,6 +137,10 @@
         <DCCReference Include="src\autenticacao\View.Login.pas">
             <Form>FrmLogin</Form>
         </DCCReference>
+        <DCCReference Include="src\infra\Infra.Configuracao.pas"/>
+        <DCCReference Include="src\infra\Infra.Sessao.pas"/>
+        <DCCReference Include="src\infra\Infra.Requisicao.Intf.pas"/>
+        <DCCReference Include="src\infra\Infra.Requisicao.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

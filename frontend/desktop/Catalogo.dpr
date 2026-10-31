@@ -6,7 +6,11 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   System.UITypes,
-  View.Login in 'src\autenticacao\View.Login.pas' {FrmLogin};
+  View.Login in 'src\autenticacao\View.Login.pas' {FrmLogin},
+  Infra.Configuracao in 'src\infra\Infra.Configuracao.pas',
+  Infra.Sessao in 'src\infra\Infra.Sessao.pas',
+  Infra.Requisicao.Intf in 'src\infra\Infra.Requisicao.Intf.pas',
+  Infra.Requisicao in 'src\infra\Infra.Requisicao.pas';
 
 {$R *.res}
 
