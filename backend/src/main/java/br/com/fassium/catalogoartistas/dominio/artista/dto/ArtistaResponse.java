@@ -10,6 +10,7 @@ public record ArtistaResponse(
         Long id,
         String nome,
         TipoArtista tipo,
+        int quantidadeAlbuns,
         List<AlbumResponse> albuns
 ) {
     public static ArtistaResponse from(Artista artista) {
@@ -22,6 +23,7 @@ public record ArtistaResponse(
                 artista.getId(),
                 artista.getNome(),
                 artista.getTipo(),
+                albuns.size(),
                 albuns);
     }
 }

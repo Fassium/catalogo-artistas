@@ -1,5 +1,6 @@
 package br.com.fassium.catalogoartistas.dominio.album;
 
+import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumFiltro;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumRequest;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +31,10 @@ public class AlbumController {
     @ApiResponse(responseCode = "200", description = "Página de álbuns")
     @GetMapping
     public Page<AlbumResponse> listar(
-            @RequestParam(defaultValue = "") String titulo,
+            @ParameterObject AlbumFiltro filtro,
             @PageableDefault(size = 10, sort = "titulo") @ParameterObject Pageable pageable) {
-        return albumService.listar(titulo, pageable);
+
+        return albumService.listar(filtro, pageable);
 
     }
 

@@ -1,6 +1,7 @@
 package br.com.fassium.catalogoartistas.dominio.album;
 
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
+import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumFiltro;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumRequest;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumResponse;
 import br.com.fassium.catalogoartistas.dominio.album.model.Album;
@@ -22,8 +23,8 @@ public class AlbumService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AlbumResponse> listar(String titulo, Pageable pageable) {
-        return albumRepository.findByTituloContainingIgnoreCase(titulo, pageable)
+    public Page<AlbumResponse> listar(AlbumFiltro filtro, Pageable pageable) {
+        return albumRepository.findAll(AlbumSpecification.comFiltro(filtro), pageable)
                 .map(AlbumResponse::from);
     }
 
@@ -59,7 +60,9 @@ public class AlbumService {
         albumRepository.delete(album);
     }
 
-    /** Público porque o ArtistaService também precisa da entidade (ligar/desligar álbum), sem duplicar a busca e o 404. */
+    /**
+     * Público porque o ArtistaService também precisa da entidade (ligar/desligar álbum), sem duplicar a busca e o 404.
+     */
     public Album buscarAlbumPorId(Long albumId) {
         return albumRepository.findById(albumId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Álbum não encontrado: " + albumId));
