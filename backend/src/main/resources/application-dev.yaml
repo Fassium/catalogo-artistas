@@ -2,3 +2,7 @@
 spring:
   jpa:
     show-sql: true
+# Só em desenvolvimento: 1h para testar e depurar sem o token expirar. O padrão (application.yaml) continua 5 min, como o edital exige.
+seguranca:
+  jwt:
+    expiracao-minutos: 60
