@@ -21,10 +21,15 @@ type
     pnlConteudo: TPanel;
     pnlCartao: TPanel;
     lblBemVindo: TLabel;
+    procedure FormCreate(Sender: TObject);
     procedure lblMenuClick(Sender: TObject);
+    procedure btnInicioClick(Sender: TObject);
+    procedure btnArtistasClick(Sender: TObject);
+    procedure btnAlbunsClick(Sender: TObject);
     procedure btnSairClick(Sender: TObject);
   private
     { Private declarations }
+    procedure SelecionarModulo(const ATitulo: string);
   public
     { Public declarations }
   end;
@@ -35,6 +40,32 @@ var
 implementation
 
 {$R *.dfm}
+
+// Mostra o nome do módulo ativo na barra do topo, ao lado do menu.
+procedure TFrmPrincipal.SelecionarModulo(const ATitulo: string);
+begin
+  lblTitulo.Caption := ATitulo;
+end;
+
+procedure TFrmPrincipal.FormCreate(Sender: TObject);
+begin
+  btnInicio.Click;
+end;
+
+procedure TFrmPrincipal.btnInicioClick(Sender: TObject);
+begin
+  SelecionarModulo(btnInicio.Caption);
+end;
+
+procedure TFrmPrincipal.btnArtistasClick(Sender: TObject);
+begin
+  SelecionarModulo(btnArtistas.Caption);
+end;
+
+procedure TFrmPrincipal.btnAlbunsClick(Sender: TObject);
+begin
+  SelecionarModulo(btnAlbuns.Caption);
+end;
 
 procedure TFrmPrincipal.lblMenuClick(Sender: TObject);
 begin

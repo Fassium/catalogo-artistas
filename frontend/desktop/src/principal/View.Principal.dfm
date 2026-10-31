@@ -14,6 +14,7 @@ object FrmPrincipal: TFrmPrincipal
   Font.Style = []
   Position = poScreenCenter
   WindowState = wsMaximized
+  OnCreate = FormCreate
   TextHeight = 15
   object pnlTopo: TPanel
     Left = 0
@@ -43,8 +44,8 @@ object FrmPrincipal: TFrmPrincipal
       Font.Height = -20
       Font.Name = 'Segoe MDL2 Assets'
       Font.Style = []
-      Layout = tlCenter
       ParentFont = False
+      Layout = tlCenter
       StyleElements = [seClient, seBorder]
       OnClick = lblMenuClick
     end
@@ -71,7 +72,7 @@ object FrmPrincipal: TFrmPrincipal
     end
     object lblUsuario: TLabel
       AlignWithMargins = True
-      Left = 864
+      Left = 900
       Top = 0
       Width = 92
       Height = 56
@@ -93,7 +94,7 @@ object FrmPrincipal: TFrmPrincipal
       ExplicitLeft = 872
     end
     object lblIconeUsuario: TLabel
-      Left = 836
+      Left = 869
       Top = 0
       Width = 28
       Height = 56
@@ -106,8 +107,8 @@ object FrmPrincipal: TFrmPrincipal
       Font.Height = -20
       Font.Name = 'Segoe MDL2 Assets'
       Font.Style = []
-      Layout = tlCenter
       ParentFont = False
+      Layout = tlCenter
       StyleElements = [seClient, seBorder]
       ExplicitLeft = 844
     end
@@ -138,6 +139,7 @@ object FrmPrincipal: TFrmPrincipal
       Font.Style = []
       Margin = 24
       ParentFont = False
+      OnClick = btnInicioClick
       ExplicitTop = 16
     end
     object btnArtistas: TSpeedButton
@@ -155,6 +157,7 @@ object FrmPrincipal: TFrmPrincipal
       Font.Style = []
       Margin = 24
       ParentFont = False
+      OnClick = btnArtistasClick
       ExplicitTop = 64
     end
     object btnAlbuns: TSpeedButton
@@ -172,6 +175,7 @@ object FrmPrincipal: TFrmPrincipal
       Font.Style = []
       Margin = 24
       ParentFont = False
+      OnClick = btnAlbunsClick
       ExplicitTop = 112
     end
     object btnSair: TSpeedButton
