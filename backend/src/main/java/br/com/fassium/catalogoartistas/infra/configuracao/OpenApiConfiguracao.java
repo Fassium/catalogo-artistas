@@ -9,11 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuração da documentação (Swagger).
- * <p>
- * Quem chama: ninguém no nosso código. O Spring, ao subir a API, acha o @Configuration,
- * executa o método @Bean e entrega o objeto ao SpringDoc, que monta a página /swagger-ui.html.
- * Ordem: Spring sobe -> lê esta classe -> SpringDoc usa o OpenAPI para escrever o título da página.
+ * Configura a documentação Swagger (/swagger-ui.html). O SpringDoc lê o bean abaixo ao subir a API.
  */
 @Configuration
 public class OpenApiConfiguracao {
@@ -21,12 +17,8 @@ public class OpenApiConfiguracao {
     private static final String ESQUEMA_BEARER = "bearerAuth";
 
     /**
-     * Cria o "cabeçalho" da documentação: título, descrição e versão que aparecem no topo do Swagger.
-     * <p>
-     * Também declara o esquema de segurança Bearer JWT: é ele que faz aparecer o botão "Authorize" no Swagger.
-     * O avaliador faz login, cola o accessToken ali e todas as rotas protegidas passam a ser testáveis.
-     * addSecurityItem aplica o cadeado a TODAS as rotas; login e refresh o desligam com @SecurityRequirements
-     * (vazio) no AutenticacaoController, porque são públicos.
+     * Define título, descrição e versão da API e o esquema Bearer JWT, que habilita o botão "Authorize".
+     * O cadeado vale para todas as rotas; as públicas (login e refresh) o removem com @SecurityRequirements.
      */
     @Bean
     public OpenAPI openAPI() {

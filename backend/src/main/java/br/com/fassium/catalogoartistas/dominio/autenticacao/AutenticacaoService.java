@@ -27,19 +27,23 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
 
+/**
+ * Login e renovação de tokens. O access token é um JWT de curta duração; o refresh token é um texto aleatório
+ * de 7 dias, guardado no banco só como hash e usado uma única vez (a cada renovação sai um par novo).
+ */
 @Service
 public class AutenticacaoService {
 
+    private static final long REFRESH_DIAS = 7;
+    // Hash BCrypt válido, usado só para igualar o tempo de resposta quando o e-mail não existe.
+    private static final String HASH_FICTICIO = "$2a$10$Y7zuYshgxcVaYWITxjtqTukY4qKh40BN77YkdKn9MK7Gsm/CSai8O";
+
     private final UsuarioRepository usuarioRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
     private final JwtPropriedades jwtPropriedades;
     private final SecureRandom secureRandom = new SecureRandom();
-    private static final long REFRESH_DIAS = 7;
-    private final RefreshTokenRepository refreshTokenRepository;
-    // BCrypt válido usado só para gastar tempo quando o e-mail não existe (ver validarCredenciais).
-    private static final String HASH_FICTICIO = "$2a$10$Y7zuYshgxcVaYWITxjtqTukY4qKh40BN77YkdKn9MK7Gsm/CSai8O";
-
 
     public AutenticacaoService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, JwtPropriedades jwtPropriedades, RefreshTokenRepository refreshTokenRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -50,12 +54,9 @@ public class AutenticacaoService {
     }
 
     /**
-     * Valida e-mail e senha. E-mail inexistente e senha errada lançam a MESMA exceção.
-     * <p>
-     * Defesa contra enumeração de usuários por tempo de resposta: o BCrypt é lento de propósito,
-     * então e-mail inexistente (sem BCrypt) responderia bem mais rápido que senha errada.
-     * Por isso, quando o e-mail não existe, rodamos o BCrypt contra um hash fictício e
-     * descartamos o resultado, só para igualar o tempo dos dois casos.
+     * Valida e-mail e senha e devolve o usuário. E-mail inexistente, senha errada e usuário inativo lançam a mesma
+     * exceção. Com e-mail inexistente, roda o BCrypt contra um hash fictício para que o tempo de resposta
+     * não revele quais e-mails existem.
      */
     private Usuario validarCredenciais(LoginRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
@@ -72,9 +73,11 @@ public class AutenticacaoService {
         }
 
         return usuario;
-
     }
-    
+
+    /**
+     * Cria o JWT assinado (HS256) com id (sub), e-mail, emissor e validade vindos do JwtPropriedades.
+     */
     private String gerarAccessToken(Usuario usuario) {
         Instant agora = Instant.now();
 
@@ -92,12 +95,18 @@ public class AutenticacaoService {
         return jwtEncoder.encode(parametros).getTokenValue();
     }
 
+    /**
+     * Gera o refresh token: 32 bytes aleatórios em Base64 URL-safe. Não é JWT, não carrega dados.
+     */
     private String gerarRefreshTokenOpaco() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    /**
+     * SHA-256 em hexadecimal. O banco guarda só o hash do refresh token, nunca o token em si.
+     */
     private String calcularHash(String valor) {
         try {
             byte[] resumo = MessageDigest.getInstance("SHA-256").digest(valor.getBytes(StandardCharsets.UTF_8));
@@ -107,11 +116,18 @@ public class AutenticacaoService {
         }
     }
 
+    /**
+     * Valida as credenciais e devolve access token + refresh token.
+     */
     @Transactional
     public TokenResponse login(LoginRequest request) {
         return emitirTokens(validarCredenciais(request));
     }
 
+    /**
+     * Gera o par de tokens e salva o hash do refresh token com validade de 7 dias.
+     * Usado pelo login e pela renovação.
+     */
     private TokenResponse emitirTokens(Usuario usuario) {
         String accessToken = gerarAccessToken(usuario);
         String refreshToken = gerarRefreshTokenOpaco();
@@ -121,6 +137,11 @@ public class AutenticacaoService {
         return TokenResponse.bearer(accessToken, refreshToken, jwtPropriedades.expiracaoMinutos() * 60);
     }
 
+    /**
+     * Troca um refresh token válido por um par novo e revoga o antigo (rotação).
+     * Se o token já estava revogado, alguém o reutilizou: revoga todos os tokens do usuário.
+     * O noRollbackFor mantém essa revogação gravada mesmo com a exceção lançada em seguida.
+     */
     @Transactional(noRollbackFor = RefreshTokenInvalidoException.class)
     public TokenResponse renovar(RefreshRequest request) {
         RefreshToken atual = refreshTokenRepository.findByHash(calcularHash(request.refreshToken()))
@@ -139,6 +160,5 @@ public class AutenticacaoService {
 
         return emitirTokens(atual.getUsuario());
     }
-
 
 }

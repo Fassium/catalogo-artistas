@@ -6,14 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Espelho do bloco "seguranca.jwt" do application.yaml, como objeto Java.
- * <p>
- * Fluxo: .env (JWT_CHAVE) -> application.yaml (chave: ${JWT_CHAVE}) -> esta classe -> quem precisar injeta.
- * O Spring liga "expiracao-minutos" do YAML ao campo expiracaoMinutos sozinho.
- * Registrada pelo @EnableConfigurationProperties do SecurityConfiguracao.
- * Quem vai usar: o JwtDecoder (chave) e, no login, o JwtEncoder (chave e minutos de validade).
+ * Configurações do JWT lidas do bloco "seguranca.jwt" do application.yaml (a chave vem da variável JWT_CHAVE).
+ * Registrada no SecurityConfiguracao; injetada em quem precisa da chave, do emissor ou da validade do token.
+ * A validação (@NotBlank, @Positive) faz a API não subir se algo estiver ausente ou inválido.
  */
-
 @Validated
 @ConfigurationProperties(prefix = "seguranca.jwt")
 public record JwtPropriedades(
@@ -21,4 +17,3 @@ public record JwtPropriedades(
         @Positive long expiracaoMinutos,
         @NotBlank String emissor) {
 }
-

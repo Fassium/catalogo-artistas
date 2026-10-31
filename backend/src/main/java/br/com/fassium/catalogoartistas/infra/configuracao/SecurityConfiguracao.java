@@ -27,18 +27,8 @@ import java.util.List;
 import java.util.Base64;
 
 /**
- * Configuração da segurança: quem pode chamar qual rota.
- * <p>
- * Ordem de uma requisição:
- * 1. O pedido chega do cliente (Postman, Angular).
- * 2. O Spring Security passa o pedido pelo filtro montado em filtroSeguranca() ANTES do Controller.
- * 3. Rota liberada (login, refresh, Swagger): segue direto para o Controller.
- * 4. Qualquer outra rota: exige token. Sem token, o pedido é barrado (401 em ProblemDetail) e o Controller nem é chamado.
- * <p>
- * EnableWebSecurity liga o Spring Security.
- * EnableConfigurationProperties registra o JwtPropriedades, que lê o bloco "seguranca.jwt" do application.yaml
- * (a chave vem do .env pela variável JWT_CHAVE).
- * O JwtDecoder confere a assinatura e a validade do token em cada requisição protegida.
+ * Segurança da API: quais rotas são públicas, como o token JWT é conferido e criado, e o CORS.
+ * Toda requisição passa pelo filtro de filtroSeguranca() antes de chegar ao Controller.
  */
 @Configuration
 @EnableWebSecurity
@@ -48,9 +38,7 @@ public class SecurityConfiguracao {
     private static final int TAMANHO_MINIMO_CHAVE_BYTES = 32;
 
     /**
-     * Ferramenta que embaralha senhas (BCrypt). Será usada no login: a senha digitada é comparada
-     * com o hash guardado na tabela usuario. A senha nunca é guardada nem comparada em texto puro.
-     * Quem chama (no futuro): o AutenticacaoService, no login.
+     * Gera e confere hash BCrypt de senhas. Usado pelo AutenticacaoService no login.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,20 +46,11 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * As regras de segurança, lidas de cima para baixo:
-     * csrf desligado: proteção contra formulário de site, que não se aplica a uma API com token.
-     * sessão STATELESS: a API não guarda "quem está logado"; cada pedido tem de trazer o token.
-     * authorizeHttpRequests: lista de quem passa sem token (login, refresh, Swagger) e a regra final,
-     * anyRequest().authenticated(), que manda todo o resto exigir token.
-     * A ordem importa: o Spring usa a primeira regra que combina com a rota.
-     * oauth2ResourceServer + jwt: manda o Spring ler o header "Authorization: Bearer <token>" de cada pedido
-     * e conferir o token usando o bean JwtDecoder (abaixo). Token válido: a requisição segue. Token ausente,
-     * adulterado ou vencido (mais de 5 min): o Spring responde 401 e o Controller nem é chamado.
-     * Customizer.withDefaults() = "use o comportamento padrão", sem ajustes extras.
-     * exceptionHandling + authenticationEntryPoint/accessDeniedHandler: trocam a resposta padrão do Spring Security
-     * (vazia ou com formato próprio) pelo ProblemDetail do ErrosSegurancaHandler: 401 sem token/token inválido, 403 sem permissão.
-     * O resource server tem o próprio gancho de 401, por isso ligamos os dois lugares.
-     * http.build() monta o filtro, e o Spring o coloca na frente de todos os Controllers.
+     * Monta o filtro de segurança que o Spring aplica a todas as requisições:
+     * rotas públicas (login, refresh, Swagger) passam direto; as demais exigem "Authorization: Bearer <token>".
+     * Token ausente, inválido ou vencido gera 401, e falta de permissão gera 403, ambos em ProblemDetail
+     * (ErrosSegurancaHandler). Sem sessão (STATELESS) e sem CSRF, pois a API autentica só por token.
+     * A ordem das regras importa: vale a primeira que combina com a rota.
      */
     @Bean
     public SecurityFilterChain filtroSeguranca(HttpSecurity http, ErrosSegurancaHandler errosSeguranca) throws Exception {
@@ -96,18 +75,10 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * CORS: quais origens (sites) o navegador pode deixar chamar esta API. Sem isto, o Angular em localhost:4200
-     * é bloqueado pelo navegador ao chamar a API em localhost:8080 (origens diferentes).
-     * <p>
-     * Só as origens da lista (seguranca.cors.origens-permitidas; variável CORS_ORIGENS, separadas por vírgula).
-     * Nunca "*": qualquer site poderia chamar a API em nome do usuário.
-     * Métodos e cabeçalhos: só o que a API usa. Authorization é o do token Bearer.
-     * Sem allowCredentials: o token vai no cabeçalho, não em cookie.
-     * maxAge: o navegador guarda a resposta do preflight (OPTIONS) por 1 h, em vez de perguntar a cada chamada.
-     * <p>
-     * O .cors(...) no filtroSeguranca usa este bean (o nome corsConfigurationSource é o que o Spring procura) e
-     * responde o preflight ANTES da checagem de token, senão o OPTIONS (que não leva token) daria 401.
-     * Não afeta o front Delphi nem o curl: CORS é uma regra só dos navegadores.
+     * Define quais origens (sites) o navegador pode deixar chamar a API, como o Angular em localhost:4200.
+     * As origens vêm de seguranca.cors.origens-permitidas (CORS_ORIGENS, separadas por vírgula), nunca "*".
+     * O .cors() do filtroSeguranca usa este bean e responde o preflight (OPTIONS) antes da checagem de token.
+     * CORS é regra só de navegador: não afeta o curl nem o front Delphi.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
@@ -124,16 +95,8 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * A chave secreta do JWT (HS256), montada UMA vez só e usada pelo jwtDecoder e pelo jwtEncoder.
-     * <p>
-     * Quem chama: o Spring, na subida da API, para entregar a chave aos dois beans abaixo.
-     * <p>
-     * O que faz, em ordem:
-     * 1. Base64.decode: a chave no .env é um texto; aqui vira os bytes reais. Se não for Base64 válido
-     * (ex.: JWT_CHAVE ausente), a API NÃO sobe e a mensagem diz o motivo.
-     * 2. Confere o tamanho: o HS256 exige no mínimo 32 bytes (256 bits). Chave curta = a API não sobe.
-     * Falhar na subida é melhor que descobrir no primeiro login, com erro 500.
-     * 3. SecretKeySpec: embrulha os bytes como chave do algoritmo HmacSHA256.
+     * Monta a chave secreta do JWT (HS256) a partir de JWT_CHAVE (Base64), uma vez só, para o jwtEncoder e o jwtDecoder.
+     * Se a chave não for Base64 válido ou tiver menos de 32 bytes, a API não sobe.
      */
     @Bean
     public SecretKey chaveJwt(JwtPropriedades propriedades) {
@@ -153,18 +116,8 @@ public class SecurityConfiguracao {
     }
 
     /**
-     * O "conferidor" de tokens (JWT = JSON Web Token: um texto com 3 partes, cabeçalho.dados.assinatura).
-     * <p>
-     * Quem chama: o Spring Security, sozinho, a cada pedido a uma rota protegida (por causa do
-     * oauth2ResourceServer acima). Nós não chamamos este método.
-     * <p>
-     * O que faz, em ordem:
-     * 1. Recebe a SecretKey pronta do bean chaveJwt (já decodificada e validada na subida).
-     * 2. NimbusJwtDecoder: monta o conferidor. Ele recalcula a assinatura do token com ESTA chave:
-     * se bater, ninguém mexeu nos dados; se não bater, o token é recusado. Também confere a validade (exp).
-     * <p>
-     * O JwtEncoder (abaixo) assina o token no login com a MESMA chave. É isso que liga as duas pontas:
-     * quem assina e quem confere precisam da mesma chave. Se a chave mudar, todos os tokens antigos deixam de valer.
+     * Confere os tokens recebidos: assinatura (com a chaveJwt), validade (tolerância de 5 s) e emissor.
+     * Chamado pelo Spring Security em cada requisição protegida; nós não chamamos.
      */
     @Bean
     public JwtDecoder jwtDecoder(SecretKey chaveJwt, JwtPropriedades propriedades) {
@@ -177,22 +130,9 @@ public class SecurityConfiguracao {
         return decoder;
     }
 
-
     /**
-     * O "criador" de tokens: o par do JwtDecoder. Ele ASSINA o token; o decoder CONFERE.
-     * <p>
-     * Quem chama: o nosso AutenticacaoService (a criar), no login e no refresh. Ele monta os dados
-     * (e-mail do usuário, hora de criação, validade de 5 min) e pede para este encoder gerar o texto do token.
-     * Diferente do decoder, aqui NÓS chamamos, quando precisamos de um token novo.
-     * <p>
-     * O que faz, em ordem:
-     * 1. Recebe a MESMA SecretKey do decoder (bean chaveJwt): a chave é montada uma vez só.
-     * 2. ImmutableSecret: embrulha a chave no formato que a biblioteca Nimbus pede para assinar.
-     * 3. NimbusJwtEncoder: monta o criador. Ele junta cabeçalho + dados, calcula a assinatura com a chave
-     * e devolve o texto "cabeçalho.dados.assinatura".
-     * <p>
-     * Fluxo completo: login -> AutenticacaoService -> jwtEncoder cria o token -> cliente guarda ->
-     * próximos pedidos levam o token -> jwtDecoder confere. Chaves diferentes = token recusado (401).
+     * Assina os tokens novos com a mesma chaveJwt do jwtDecoder (quem assina e quem confere usam a mesma chave).
+     * Chamado pelo AutenticacaoService no login e no refresh.
      */
     @Bean
     public JwtEncoder jwtEncoder(SecretKey chaveJwt) {
