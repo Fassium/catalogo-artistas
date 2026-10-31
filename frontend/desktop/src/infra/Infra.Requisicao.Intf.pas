@@ -14,6 +14,7 @@ type
     function Get: IResponse;
     function Post: IResponse;
     function Put: IResponse;
+    function Delete: IResponse;
     function AdicionarCorpo(const ACorpo: TJSONObject): IRequisicao;
   end;
 

@@ -5,14 +5,17 @@ interface
 uses Infra.Requisicao.Intf, RESTRequest4D, System.JSON;
 
 type
+  TMetodoHttp = (MetodoGet, MetodoPost, MetodoPut, MetodoDelete);
   TRequisicao = class(TInterfacedObject, IRequisicao)
   private
     FRequisicao: RESTRequest4D.IRequest;
     constructor Create;
+    function Executar(const AMetodo: TMetodoHttp): IResponse;
     function Recurso(const ARecurso: string): IRequisicao;
     function Get: IResponse;
     function Post: IResponse;
     function Put: IResponse;
+    function Delete: IResponse;
     function AdicionarCorpo(const ACorpo: TJSONObject): IRequisicao;
   public
     class function Nova: IRequisicao;
@@ -40,11 +43,32 @@ begin
 
 end;
 
+function TRequisicao.Delete: IResponse;
+begin
+
+  Result := Executar(MetodoDelete);
+
+end;
+
+function TRequisicao.Executar(const AMetodo: TMetodoHttp): IResponse;
+begin
+
+  if TSessao.Ativa then
+    FRequisicao.TokenBearer(TSessao.AccessToken);
+
+  case AMetodo of
+    MetodoGet:    Result := FRequisicao.Get;
+    MetodoPost:   Result := FRequisicao.Post;
+    MetodoPut:    Result := FRequisicao.Put;
+    MetodoDelete: Result := FRequisicao.Delete;
+  end;
+
+end;
+
 function TRequisicao.Get: IResponse;
 begin
 
-  FRequisicao.TokenBearer(TSessao.AccessToken);
-  Result := FRequisicao.Get;
+  Result := Executar(MetodoGet);
 
 end;
 
@@ -58,16 +82,14 @@ end;
 function TRequisicao.Post: IResponse;
 begin
 
-  FRequisicao.TokenBearer(TSessao.AccessToken);
-  Result := FRequisicao.Post;
+  Result := Executar(MetodoPost);
 
 end;
 
 function TRequisicao.Put: IResponse;
 begin
 
-  FRequisicao.TokenBearer(TSessao.AccessToken);
-  Result := FRequisicao.Put;
+  Result := Executar(MetodoPut);
 
 end;
 
