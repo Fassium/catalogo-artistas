@@ -26,7 +26,8 @@ uses Infra.Configuracao, Infra.Sessao;
 
 function TRequisicao.AdicionarCorpo(const ACorpo: TJSONObject): IRequisicao;
 begin
-
+ FRequisicao.AddBody(Acorpo);
+ Result := Self;
 end;
 
 constructor TRequisicao.Create;
