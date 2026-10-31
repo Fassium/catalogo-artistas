@@ -17,6 +17,7 @@ seguranca:
   jwt:
     chave: ${JWT_CHAVE}
     expiracao-minutos: 5
+    refresh-expiracao-dias: 1
     emissor: catalogo-artistas-api
   cors:
     origens-permitidas: ${CORS_ORIGENS:http://localhost:4200}

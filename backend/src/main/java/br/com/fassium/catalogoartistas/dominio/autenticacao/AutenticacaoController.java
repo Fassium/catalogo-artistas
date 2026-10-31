@@ -21,7 +21,7 @@ public class AutenticacaoController {
     }
 
     @Operation(summary = "Login",
-            description = "Valida e-mail e senha e devolve o access token (JWT, 5 min) e o refresh token (7 dias).")
+            description = "Valida e-mail e senha e devolve o access token (JWT, 5 min) e o refresh token (1 dia).")
     @SecurityRequirements
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {

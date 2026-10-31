@@ -15,5 +15,6 @@ import org.springframework.validation.annotation.Validated;
 public record JwtPropriedades(
         @NotBlank String chave,
         @Positive long expiracaoMinutos,
+        @Positive long refreshExpiracaoDias,
         @NotBlank String emissor) {
 }

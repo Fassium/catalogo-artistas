@@ -29,12 +29,11 @@ import java.util.Locale;
 
 /**
  * Login e renovação de tokens. O access token é um JWT de curta duração; o refresh token é um texto aleatório
- * de 7 dias, guardado no banco só como hash e usado uma única vez (a cada renovação sai um par novo).
+ * (validade em seguranca.jwt.refresh-expiracao-dias), guardado no banco só como hash e usado uma única vez (a cada renovação sai um par novo).
  */
 @Service
 public class AutenticacaoService {
 
-    private static final long REFRESH_DIAS = 7;
     // Hash BCrypt válido, usado só para igualar o tempo de resposta quando o e-mail não existe.
     private static final String HASH_FICTICIO = "$2a$10$Y7zuYshgxcVaYWITxjtqTukY4qKh40BN77YkdKn9MK7Gsm/CSai8O";
 
@@ -125,14 +124,14 @@ public class AutenticacaoService {
     }
 
     /**
-     * Gera o par de tokens e salva o hash do refresh token com validade de 7 dias.
+     * Gera o par de tokens e salva o hash do refresh token com a validade configurada.
      * Usado pelo login e pela renovação.
      */
     private TokenResponse emitirTokens(Usuario usuario) {
         String accessToken = gerarAccessToken(usuario);
         String refreshToken = gerarRefreshTokenOpaco();
 
-        refreshTokenRepository.save(new RefreshToken(usuario, calcularHash(refreshToken), Instant.now().plus(REFRESH_DIAS, ChronoUnit.DAYS)));
+        refreshTokenRepository.save(new RefreshToken(usuario, calcularHash(refreshToken), Instant.now().plus(jwtPropriedades.refreshExpiracaoDias(), ChronoUnit.DAYS)));
 
         return TokenResponse.bearer(accessToken, refreshToken, jwtPropriedades.expiracaoMinutos() * 60);
     }
