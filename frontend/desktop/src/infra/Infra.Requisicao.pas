@@ -17,13 +17,15 @@ type
     function Put: IResponse;
     function Delete: IResponse;
     function AdicionarCorpo(const ACorpo: TJSONObject): IRequisicao;
+    function RenovarTokens: Boolean;
+    function Enviar(const AMetodo: TMetodoHttp): IResponse;
   public
     class function Nova: IRequisicao;
   end;
 
 implementation
 
-uses Infra.Configuracao, Infra.Sessao;
+uses Infra.Configuracao, Infra.Sessao, Infra.Erros;
 
 { TRequisicao }
 
@@ -50,7 +52,7 @@ begin
 
 end;
 
-function TRequisicao.Executar(const AMetodo: TMetodoHttp): IResponse;
+function TRequisicao.Enviar(const AMetodo: TMetodoHttp): IResponse;
 begin
 
   if TSessao.Ativa then
@@ -62,6 +64,25 @@ begin
     MetodoPut:    Result := FRequisicao.Put;
     MetodoDelete: Result := FRequisicao.Delete;
   end;
+
+end;
+
+function TRequisicao.Executar(const AMetodo: TMetodoHttp): IResponse;
+begin
+
+  Result := Enviar(AMetodo);
+
+  if (Result.StatusCode = 401) and TSessao.Ativa then
+  begin
+
+    if RenovarTokens then
+      Result := Enviar(AMetodo)
+    else
+      TSessao.Encerrar;
+
+  end;
+
+  TErros.Validar(Result);
 
 end;
 
@@ -98,6 +119,34 @@ begin
 
   FRequisicao.Resource(ARecurso);
   Result := Self;
+
+end;
+
+function TRequisicao.RenovarTokens: Boolean;
+var
+  LCorpo : TJSONObject;
+  LResposta : IResponse;
+  LTokens : TJSONObject;
+begin
+
+  LCorpo := TJSONObject.Create;
+  LCorpo.AddPair('refreshToken', TSessao.RefreshToken);
+
+  LResposta := RESTRequest4D.TRequest.New
+  .BaseURL(TConfiguracao.UrlApi)
+  .Resource('/v1/autenticacao/refresh')
+  .AddBody(LCorpo)
+  .Put;
+
+  Result := LResposta.StatusCode = 200;
+
+  if Result then
+  begin
+
+    LTokens := LResposta.JSONValue AS TJSONObject;
+    TSessao.AtualizarTokens(LTokens.GetValue<string>('accessToken'),LTokens.GetValue<string>('refreshToken'));
+
+  end;
 
 end;
 

@@ -141,6 +141,7 @@
         <DCCReference Include="src\infra\Infra.Sessao.pas"/>
         <DCCReference Include="src\infra\Infra.Requisicao.Intf.pas"/>
         <DCCReference Include="src\infra\Infra.Requisicao.pas"/>
+        <DCCReference Include="src\infra\Infra.Erros.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

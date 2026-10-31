@@ -10,7 +10,8 @@ uses
   Infra.Configuracao in 'src\infra\Infra.Configuracao.pas',
   Infra.Sessao in 'src\infra\Infra.Sessao.pas',
   Infra.Requisicao.Intf in 'src\infra\Infra.Requisicao.Intf.pas',
-  Infra.Requisicao in 'src\infra\Infra.Requisicao.pas';
+  Infra.Requisicao in 'src\infra\Infra.Requisicao.pas',
+  Infra.Erros in 'src\infra\Infra.Erros.pas';
 
 {$R *.res}
 
