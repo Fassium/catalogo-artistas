@@ -12,7 +12,6 @@ type
     lblSubtitulo: TLabel;
     lblEmail: TLabel;
     lblSenha: TLabel;
-    lblMensagemSenha: TLabel;
     edtEmail: TEdit;
     edtSenha: TEdit;
     chkMostrarSenha: TCheckBox;
@@ -41,14 +40,14 @@ implementation
 
 procedure TFrmLogin.btnEntrarClick(Sender: TObject);
 begin
-  lblMensagemSenha.Visible := False;
-
   if (edtEmail.Text = 'thiago') and (edtSenha.Text = '123') then
     ModalResult := mrOk
   else
   begin
-    lblMensagemSenha.Caption := 'E-mail ou senha inválidos';
-    lblMensagemSenha.Visible := True;
+    MessageDlg('Não foi possível entrar. Confira seu e-mail e senha e tente novamente.',
+      TMsgDlgType.mtInformation, [mbOK], 0);
+    edtSenha.SetFocus;
+    edtSenha.SelectAll;
   end;
 end;
 

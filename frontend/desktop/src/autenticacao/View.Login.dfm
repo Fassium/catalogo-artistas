@@ -53,22 +53,6 @@ object FrmLogin: TFrmLogin
     Height = 15
     Caption = 'Senha'
   end
-  object lblMensagemSenha: TLabel
-    Left = 40
-    Top = 345
-    Width = 300
-    Height = 17
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'E-mail ou senha inv'#225'lidos'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    ParentFont = False
-    Visible = False
-  end
   object edtEmail: TEdit
     Left = 40
     Top = 145

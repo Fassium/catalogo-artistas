@@ -14,7 +14,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Windows10');
-
   FrmLogin := TFrmLogin.Create(nil);
   try
     if FrmLogin.ShowModal <> mrOk then
