@@ -5,7 +5,11 @@ import br.com.fassium.catalogoartistas.dominio.album.model.Album;
 import br.com.fassium.catalogoartistas.dominio.artista.model.TipoArtista;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Locale;
+
 public final class AlbumSpecification {
+
+    private static final char CARACTERE_ESCAPE = '\\';
 
     private AlbumSpecification() {
     }
@@ -15,8 +19,19 @@ public final class AlbumSpecification {
             return Specification.unrestricted();
         }
 
+        String padrao = "%" + escaparCuringas(titulo.toLowerCase(Locale.ROOT)) + "%";
         return (root, query, cb) ->
-                cb.like(cb.lower(root.get("titulo")), "%" + titulo.toLowerCase() + "%");
+                cb.like(cb.lower(root.get("titulo")), padrao, CARACTERE_ESCAPE);
+    }
+
+    /**
+     * No LIKE, "%" e "_" são curingas: sem escapar, ?titulo=_ trazia todos os álbuns.
+     * A barra (caractere de escape) é escapada primeiro para não se confundir com as outras.
+     */
+    private static String escaparCuringas(String texto) {
+        return texto.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     public static Specification<Album> doTipoArtista(TipoArtista tipo) {

@@ -7,9 +7,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Autenticação", description = "Login e renovação de tokens (rotas públicas)")
+@Tag(name = "Autenticação", description = "Login, renovação de tokens e logout (rotas públicas)")
 @RestController
 @RequestMapping("/v1/autenticacao")
 public class AutenticacaoController {
@@ -35,5 +36,15 @@ public class AutenticacaoController {
     @PutMapping("/refresh")
     public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
         return autenticacaoService.renovar(request);
+    }
+
+    @Operation(summary = "Logout",
+            description = "Revoga o refresh token informado. Sempre 204, mesmo se o token não existir ou já estiver revogado. "
+                    + "O access token continua válido até expirar (5 min); o front deve descartá-lo.")
+    @SecurityRequirements
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
+        autenticacaoService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 }

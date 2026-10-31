@@ -1,6 +1,7 @@
 package br.com.fassium.catalogoartistas.dominio.album;
 
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
+import br.com.fassium.catalogoartistas.common.paginacao.Ordenacao;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumFiltro;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumRequest;
 import br.com.fassium.catalogoartistas.dominio.album.dto.AlbumResponse;
@@ -11,8 +12,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class AlbumService {
+
+    private static final List<String> CAMPOS_ORDENAVEIS = List.of("id", "titulo", "anoLancamento");
 
     private final AlbumRepository albumRepository;
     private final ArtistaRepository artistaRepository;
@@ -24,6 +29,7 @@ public class AlbumService {
 
     @Transactional(readOnly = true)
     public Page<AlbumResponse> listar(AlbumFiltro filtro, Pageable pageable) {
+        Ordenacao.validar(pageable, CAMPOS_ORDENAVEIS);
         return albumRepository.findAll(AlbumSpecification.comFiltro(filtro), pageable)
                 .map(AlbumResponse::from);
     }

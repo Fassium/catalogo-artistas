@@ -47,7 +47,7 @@ public class SecurityConfiguracao {
 
     /**
      * Monta o filtro de segurança que o Spring aplica a todas as requisições:
-     * rotas públicas (login, refresh, Swagger) passam direto; as demais exigem "Authorization: Bearer <token>".
+     * rotas públicas (login, refresh, logout, Swagger) passam direto; as demais exigem "Authorization: Bearer <token>".
      * Token ausente, inválido ou vencido gera 401, e falta de permissão gera 403, ambos em ProblemDetail
      * (ErrosSegurancaHandler). Sem sessão (STATELESS) e sem CSRF, pois a API autentica só por token.
      * A ordem das regras importa: vale a primeira que combina com a rota.
@@ -61,6 +61,7 @@ public class SecurityConfiguracao {
                 .authorizeHttpRequests(rotas -> rotas
                         .requestMatchers(HttpMethod.POST, "/v1/autenticacao/login").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/v1/autenticacao/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/autenticacao/logout").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(erros -> erros

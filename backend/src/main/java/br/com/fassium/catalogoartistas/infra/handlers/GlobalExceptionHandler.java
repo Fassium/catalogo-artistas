@@ -1,6 +1,7 @@
 package br.com.fassium.catalogoartistas.infra.handlers;
 
 import br.com.fassium.catalogoartistas.common.exceptions.CredenciaisInvalidasException;
+import br.com.fassium.catalogoartistas.common.exceptions.OrdenacaoInvalidaException;
 import br.com.fassium.catalogoartistas.common.exceptions.RecursoNaoEncontradoException;
 import br.com.fassium.catalogoartistas.common.exceptions.RefreshTokenInvalidoException;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -55,19 +57,37 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problema, headers, HttpStatus.BAD_REQUEST, request);
     }
 
+    /**
+     * Dois casos chegam aqui:
+     * - regra de validação violada (@NotBlank, @Size...) no corpo: 422, com a mensagem da regra;
+     * - valor que nem converte para o tipo (?artistaId=abc, ?tipoArtista=XYZ): 400, como no path e no corpo.
+     *   A mensagem do Spring nesse caso cita classes Java, então vai só "Valor inválido.".
+     */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        List<Map<String, String>> camposInvalidos = ex.getBindingResult().getFieldErrors().stream()
+        List<FieldError> erros = ex.getBindingResult().getFieldErrors();
+        boolean erroDeConversao = erros.stream().anyMatch(FieldError::isBindingFailure);
+
+        List<Map<String, String>> camposInvalidos = erros.stream()
                 .map(erro -> Map.of(
                         "campo", erro.getField(),
-                        "mensagem", String.valueOf(erro.getDefaultMessage())))
+                        "mensagem", erro.isBindingFailure()
+                                ? "Valor inválido."
+                                : String.valueOf(erro.getDefaultMessage())))
                 .toList();
 
-        ProblemDetail problema = ProblemDetail.forStatusAndDetail(
-                HttpStatus.UNPROCESSABLE_CONTENT, "Há campos inválidos na requisição.");
+        HttpStatus statusResposta = erroDeConversao ? HttpStatus.BAD_REQUEST : HttpStatus.UNPROCESSABLE_CONTENT;
+        String detalhe = erroDeConversao ? "Há parâmetros com valor inválido." : "Há campos inválidos na requisição.";
+
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(statusResposta, detalhe);
         problema.setProperty("camposInvalidos", camposInvalidos);
-        return handleExceptionInternal(ex, problema, headers, HttpStatus.UNPROCESSABLE_CONTENT, request);
+        return handleExceptionInternal(ex, problema, headers, statusResposta, request);
+    }
+
+    @ExceptionHandler(OrdenacaoInvalidaException.class)
+    public ProblemDetail tratarOrdenacaoNaoPermitida(OrdenacaoInvalidaException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(CredenciaisInvalidasException.class)

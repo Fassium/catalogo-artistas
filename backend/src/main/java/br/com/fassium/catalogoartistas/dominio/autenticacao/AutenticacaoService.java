@@ -160,4 +160,14 @@ public class AutenticacaoService {
         return emitirTokens(atual.getUsuario());
     }
 
+    /**
+     * Revoga o refresh token informado. Token inexistente ou já revogado não é erro (logout idempotente),
+     * e a resposta igual em todos os casos não revela se o token existia.
+     */
+    @Transactional
+    public void logout(RefreshRequest request) {
+        refreshTokenRepository.findByHash(calcularHash(request.refreshToken()))
+                .ifPresent(RefreshToken::revogar);
+    }
+
 }
