@@ -34,20 +34,42 @@ var
 
 implementation
 
+uses
+  Servico.Autenticacao, Infra.Erros;
+
 {$R *.dfm}
 
 { TFrmLogin }
 
 procedure TFrmLogin.btnEntrarClick(Sender: TObject);
 begin
-  if (edtEmail.Text = 'thiago') and (edtSenha.Text = '123') then
-    ModalResult := mrOk
-  else
+  if Trim(edtEmail.Text).IsEmpty then
   begin
-    MessageDlg('Não foi possível entrar. Confira seu e-mail e senha e tente novamente.',
-      TMsgDlgType.mtInformation, [mbOK], 0);
+    MessageDlg('Informe o e-mail.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+    edtEmail.SetFocus;
+    Exit;
+  end;
+
+  if Trim(edtSenha.Text).IsEmpty then
+  begin
+    MessageDlg('Informe a senha.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
     edtSenha.SetFocus;
-    edtSenha.SelectAll;
+    Exit;
+  end;
+
+  try
+
+    TServicoAutenticacao.Entrar(Trim(edtEmail.Text), edtSenha.Text);
+    ModalResult := mrOk;
+
+  except
+    on E: EErroApi do
+    begin
+      MessageDlg(E.Message, TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK],0);
+      edtSenha.SetFocus;
+      edtSenha.SelectAll;
+    end;
+
   end;
 end;
 

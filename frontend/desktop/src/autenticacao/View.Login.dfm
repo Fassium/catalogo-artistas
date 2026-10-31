@@ -65,6 +65,7 @@ object FrmLogin: TFrmLogin
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    Text = 'thiago@fassium.com'
     TextHint = 'seu@email.com'
   end
   object edtSenha: TEdit
@@ -80,6 +81,7 @@ object FrmLogin: TFrmLogin
     ParentFont = False
     PasswordChar = '*'
     TabOrder = 1
+    Text = 'admin1234'
     TextHint = 'Sua senha'
   end
   object chkMostrarSenha: TCheckBox

@@ -11,7 +11,8 @@ uses
   Infra.Sessao in 'src\infra\Infra.Sessao.pas',
   Infra.Requisicao.Intf in 'src\infra\Infra.Requisicao.Intf.pas',
   Infra.Requisicao in 'src\infra\Infra.Requisicao.pas',
-  Infra.Erros in 'src\infra\Infra.Erros.pas';
+  Infra.Erros in 'src\infra\Infra.Erros.pas',
+  Servico.Autenticacao in 'src\autenticacao\Servico.Autenticacao.pas';
 
 {$R *.res}
 
