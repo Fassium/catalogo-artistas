@@ -1,6 +1,11 @@
 package br.com.fassium.catalogoartistas.dominio.album.model;
 
+import br.com.fassium.catalogoartistas.dominio.artista.model.Artista;
 import jakarta.persistence.*;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "album")
@@ -15,6 +20,9 @@ public class Album {
 
     @Column(name = "ano_lancamento")
     private Integer anoLancamento;
+
+    @ManyToMany(mappedBy = "albuns")
+    private Set<Artista> artistas = new HashSet<>();
 
     protected Album() {
     }
@@ -42,6 +50,10 @@ public class Album {
 
     public void setAnoLancamento(Integer anoLancamento) {
         this.anoLancamento = anoLancamento;
+    }
+
+    public Set<Artista> getArtistas() {
+        return Collections.unmodifiableSet(artistas);
     }
 
     /**
